@@ -90,9 +90,146 @@ class TransactionStore {
 
 const store = new TransactionStore();
 
+// --- Subscription Management ---
+class SubscriptionStore {
+  constructor(transactionStore) {
+    this.subscriptions = JSON.parse(localStorage.getItem('subscriptions')) || [];
+    this.transactionStore = transactionStore;
+    this.lastCheck = localStorage.getItem('lastSubscriptionCheck') || format(new Date(), 'yyyy-MM-dd');
+
+    // Initial dummy data if empty
+    if (this.subscriptions.length === 0) {
+      this.addSubscription({
+        id: crypto.randomUUID(),
+        title: '家賃',
+        amount: 80000,
+        day: 27
+      });
+      this.addSubscription({
+        id: crypto.randomUUID(),
+        title: 'Netflix',
+        amount: 1490,
+        day: 15
+      });
+    }
+  }
+
+  addSubscription(sub) {
+    this.subscriptions.push(sub);
+    this.save();
+  }
+
+  removeSubscription(id) {
+    this.subscriptions = this.subscriptions.filter(s => s.id !== id);
+    this.save();
+  }
+
+  save() {
+    localStorage.setItem('subscriptions', JSON.stringify(this.subscriptions));
+    updateSubscriptionUI();
+  }
+
+  // Check and generate transactions for passed days
+  checkAndGenerate() {
+    const today = new Date();
+    const lastCheckDate = parseISO(this.lastCheck);
+
+    // If last check was today, skip
+    if (format(today, 'yyyy-MM-dd') === this.lastCheck) return;
+
+    // Iterate from lastCheck + 1 day to today
+    let current = lastCheckDate;
+    current.setDate(current.getDate() + 1);
+
+    while (current <= today) {
+      const dayOfMonth = current.getDate();
+
+      this.subscriptions.forEach(sub => {
+        if (Number(sub.day) === dayOfMonth) {
+          // Generate transaction
+          this.transactionStore.addTransaction({
+            id: crypto.randomUUID(),
+            date: format(current, 'yyyy-MM-dd'),
+            title: sub.title + ' (自動)',
+            amount: sub.amount,
+            type: 'expense',
+            category: 'fixed' // Subscriptions are typically fixed expenses
+          });
+        }
+      });
+      current.setDate(current.getDate() + 1);
+    }
+    this.lastCheck = format(today, 'yyyy-MM-dd');
+    localStorage.setItem('lastSubscriptionCheck', this.lastCheck);
+  }
+
+  getSubscriptions() {
+    return this.subscriptions;
+  }
+}
+
+const subStore = new SubscriptionStore(store);
+
+// --- Debt Management ---
+class DebtStore {
+  constructor(transactionStore) {
+    this.debts = JSON.parse(localStorage.getItem('debts')) || [];
+    this.transactionStore = transactionStore;
+  }
+
+  addDebt(debt) {
+    this.debts.push(debt);
+    this.save();
+  }
+
+  repayDebt(id, amount) {
+    const debt = this.debts.find(d => d.id === id);
+    if (debt) {
+      debt.balance -= amount;
+      if (debt.balance < 0) debt.balance = 0;
+
+      // Record as expense
+      this.transactionStore.addTransaction({
+        id: crypto.randomUUID(),
+        date: format(new Date(), 'yyyy-MM-dd'),
+        title: `返済: ${debt.name}`,
+        amount: amount,
+        type: 'expense',
+        category: 'other' // Or create a 'debt' category
+      });
+
+      this.save();
+    }
+  }
+
+  removeDebt(id) {
+    this.debts = this.debts.filter(d => d.id !== id);
+    this.save();
+  }
+
+  save() {
+    localStorage.setItem('debts', JSON.stringify(this.debts));
+    updateDebtUI();
+  }
+
+  getTotalDebt() {
+    return this.debts.reduce((sum, d) => sum + Number(d.balance), 0);
+  }
+}
+
+const debtStore = new DebtStore(store);
+
 // --- UI Updates ---
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' }).format(amount);
+};
+
+const getCategoryColor = (cat) => {
+  const map = {
+    food: '#e17055', daily: '#00b894', transport: '#0984e3',
+    entertainment: '#6c5ce7', fixed: '#d63031', salary: '#fdcb6e', other: '#636e72'
+  };
+  return map[cat] || '#636e72';
 };
 
 const updateStats = () => {
@@ -110,6 +247,59 @@ const updateStats = () => {
     trendEl.innerHTML = '<i class="fa-solid fa-arrow-down"></i> 赤字';
     trendEl.className = 'trend down';
   }
+};
+
+const updateDebtUI = () => {
+  const listEl = document.getElementById('debt-list');
+  if (!listEl) return;
+  listEl.innerHTML = '';
+
+  const totalDebt = debtStore.getTotalDebt();
+  document.getElementById('total-debt').textContent = formatCurrency(totalDebt);
+
+  debtStore.debts.forEach(debt => {
+    const html = `
+      <div class="transaction-item" style="background: rgba(255,255,255,0.05);">
+        <div class="t-icon" style="background: #d63031; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+          <i class="fa-solid fa-building-columns" style="color: #fff;"></i>
+        </div>
+        <div class="t-details">
+          <h4>${debt.name}</h4>
+          <p>残高: ${formatCurrency(debt.balance)}</p>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+             <button class="glass-btn-sm repay-btn" data-id="${debt.id}" style="font-size: 0.8rem; padding: 5px 10px; background: rgba(0, 184, 148, 0.2); color: #00b894; border: 1px solid #00b894;">
+            返済
+          </button>
+          <button class="glass-btn-sm delete-debt-btn" data-id="${debt.id}" style="border: none; background: transparent; color: #ff7675;">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </div>
+      </div>
+    `;
+    listEl.insertAdjacentHTML('beforeend', html);
+  });
+
+  // Repay Button Logic
+  document.querySelectorAll('.repay-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const id = e.currentTarget.dataset.id;
+      const amount = prompt('返済額を入力してください:');
+      if (amount && !isNaN(amount)) {
+        debtStore.repayDebt(id, Number(amount));
+        alert('返済を記録しました。支出にも追加されました。');
+      }
+    });
+  });
+
+  // Delete Debt Logic
+  document.querySelectorAll('.delete-debt-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      if (confirm('この借入先を削除しますか？')) {
+        debtStore.removeDebt(e.currentTarget.dataset.id);
+      }
+    });
+  });
 };
 
 const updateTransactionList = () => {
@@ -248,89 +438,11 @@ const updateUI = () => {
   updateStats();
   updateTransactionList();
   updateChart();
+  updateCategoryChart(document.getElementById('analytics-period')?.value || 'current');
+  updateDebtUI();
 };
 
-// --- Subscription Management ---
-class SubscriptionStore {
-  constructor(transactionStore) {
-    this.subscriptions = JSON.parse(localStorage.getItem('subscriptions')) || [];
-    this.transactionStore = transactionStore;
-    this.lastCheck = localStorage.getItem('lastSubscriptionCheck') || format(new Date(), 'yyyy-MM-dd');
-
-    // Initial dummy data if empty
-    if (this.subscriptions.length === 0) {
-      this.addSubscription({
-        id: crypto.randomUUID(),
-        title: '家賃',
-        amount: 80000,
-        day: 27
-      });
-      this.addSubscription({
-        id: crypto.randomUUID(),
-        title: 'Netflix',
-        amount: 1490,
-        day: 15
-      });
-    }
-  }
-
-  addSubscription(sub) {
-    this.subscriptions.push(sub);
-    this.save();
-  }
-
-  removeSubscription(id) {
-    this.subscriptions = this.subscriptions.filter(s => s.id !== id);
-    this.save();
-  }
-
-  save() {
-    localStorage.setItem('subscriptions', JSON.stringify(this.subscriptions));
-    updateSubscriptionUI();
-  }
-
-  // Check and generate transactions for passed days
-  checkAndGenerate() {
-    const today = new Date();
-    const lastCheckDate = parseISO(this.lastCheck);
-
-    // If last check was today, skip
-    if (format(today, 'yyyy-MM-dd') === this.lastCheck) return;
-
-    // Iterate from lastCheck + 1 day to today
-    let current = lastCheckDate;
-    current.setDate(current.getDate() + 1);
-
-    while (current <= today) {
-      const dayOfMonth = current.getDate();
-
-      this.subscriptions.forEach(sub => {
-        if (Number(sub.day) === dayOfMonth) {
-          // Generate transaction
-          this.transactionStore.addTransaction({
-            id: crypto.randomUUID(),
-            date: format(current, 'yyyy-MM-dd'),
-            title: sub.title + ' (自動)',
-            amount: sub.amount,
-            type: 'expense',
-            category: 'fixed'
-          });
-          console.log(`Auto-generated: ${sub.title}`);
-        }
-      });
-
-      current.setDate(current.getDate() + 1);
-    }
-
-    // Update last check
-    this.lastCheck = format(today, 'yyyy-MM-dd');
-    localStorage.setItem('lastSubscriptionCheck', this.lastCheck);
-  }
-}
-
-const subStore = new SubscriptionStore(store);
-
-// --- Subscription UI ---
+// --- Event Listeners ---
 const updateSubscriptionUI = () => {
   const listEl = document.getElementById('subscription-list');
   if (!listEl) return; // Guard clause
@@ -428,6 +540,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const closeSubBtn = document.getElementById('close-sub-modal');
   const subForm = document.getElementById('subscription-form');
 
+  // Debt Modal Logic
+  const debtModal = document.getElementById('debt-modal');
+  const addDebtBtn = document.getElementById('add-debt-btn');
+  const closeDebtBtn = document.getElementById('close-debt-modal');
+  const debtForm = document.getElementById('debt-form');
+
   addBtn.addEventListener('click', () => {
     modal.classList.add('active');
     document.getElementById('date').valueAsDate = new Date(); // Set today
@@ -445,9 +563,23 @@ document.addEventListener('DOMContentLoaded', () => {
     subModal.classList.remove('active');
   });
 
+  // Debt Modal Events
+  if (addDebtBtn) {
+    addDebtBtn.addEventListener('click', () => {
+      debtModal.classList.add('active');
+    });
+  }
+
+  if (closeDebtBtn) {
+    closeDebtBtn.addEventListener('click', () => {
+      debtModal.classList.remove('active');
+    });
+  }
+
   window.addEventListener('click', (e) => {
     if (e.target === modal) modal.classList.remove('active');
     if (e.target === subModal) subModal.classList.remove('active');
+    if (e.target === debtModal) debtModal.classList.remove('active');
   });
 
   // Form Submit
@@ -487,6 +619,26 @@ document.addEventListener('DOMContentLoaded', () => {
     subModal.classList.remove('active');
     alert('設定しました。次回から指定日に自動で記録されます。');
   });
+
+  // Debt Form Submit
+  if (debtForm) {
+    debtForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('debt-name').value;
+      const balance = document.getElementById('debt-balance').value;
+      const payment = document.getElementById('debt-payment').value;
+
+      debtStore.addDebt({
+        id: crypto.randomUUID(),
+        name: name,
+        balance: Number(balance),
+        monthlyPayment: Number(payment)
+      });
+
+      debtForm.reset();
+      debtModal.classList.remove('active');
+    });
+  }
 
   // Clear Data
   document.getElementById('clear-data-btn').addEventListener('click', () => {
