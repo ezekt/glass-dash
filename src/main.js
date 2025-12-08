@@ -250,16 +250,149 @@ const updateUI = () => {
   updateChart();
 };
 
+// --- Subscription Management ---
+class SubscriptionStore {
+  constructor(transactionStore) {
+    this.subscriptions = JSON.parse(localStorage.getItem('subscriptions')) || [];
+    this.transactionStore = transactionStore;
+    this.lastCheck = localStorage.getItem('lastSubscriptionCheck') || format(new Date(), 'yyyy-MM-dd');
+
+    // Initial dummy data if empty
+    if (this.subscriptions.length === 0) {
+      this.addSubscription({
+        id: crypto.randomUUID(),
+        title: '家賃',
+        amount: 80000,
+        day: 27
+      });
+      this.addSubscription({
+        id: crypto.randomUUID(),
+        title: 'Netflix',
+        amount: 1490,
+        day: 15
+      });
+    }
+  }
+
+  addSubscription(sub) {
+    this.subscriptions.push(sub);
+    this.save();
+  }
+
+  removeSubscription(id) {
+    this.subscriptions = this.subscriptions.filter(s => s.id !== id);
+    this.save();
+  }
+
+  save() {
+    localStorage.setItem('subscriptions', JSON.stringify(this.subscriptions));
+    updateSubscriptionUI();
+  }
+
+  // Check and generate transactions for passed days
+  checkAndGenerate() {
+    const today = new Date();
+    const lastCheckDate = parseISO(this.lastCheck);
+
+    // If last check was today, skip
+    if (format(today, 'yyyy-MM-dd') === this.lastCheck) return;
+
+    // Iterate from lastCheck + 1 day to today
+    let current = lastCheckDate;
+    current.setDate(current.getDate() + 1);
+
+    while (current <= today) {
+      const dayOfMonth = current.getDate();
+
+      this.subscriptions.forEach(sub => {
+        if (Number(sub.day) === dayOfMonth) {
+          // Generate transaction
+          this.transactionStore.addTransaction({
+            id: crypto.randomUUID(),
+            date: format(current, 'yyyy-MM-dd'),
+            title: sub.title + ' (自動)',
+            amount: sub.amount,
+            type: 'expense',
+            category: 'fixed'
+          });
+          console.log(`Auto-generated: ${sub.title}`);
+        }
+      });
+
+      current.setDate(current.getDate() + 1);
+    }
+
+    // Update last check
+    this.lastCheck = format(today, 'yyyy-MM-dd');
+    localStorage.setItem('lastSubscriptionCheck', this.lastCheck);
+  }
+}
+
+const subStore = new SubscriptionStore(store);
+
+// --- Subscription UI ---
+const updateSubscriptionUI = () => {
+  const listEl = document.getElementById('subscription-list');
+  if (!listEl) return; // Guard clause
+  listEl.innerHTML = '';
+
+  subStore.subscriptions.forEach(sub => {
+    const html = `
+      <div class="fixed-cost-item" style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); border-radius: 8px;">
+        <div>
+          <div style="font-size: 0.9rem;">${sub.title}</div>
+          <div style="font-size: 0.75rem; color: var(--text-muted);">毎月 ${sub.day}日</div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span>¥${sub.amount.toLocaleString()}</span>
+          <button class="glass-btn-sm delete-sub-btn" data-id="${sub.id}" style="border: none; background: transparent; color: #ff7675; cursor: pointer;">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </div>
+      </div>
+    `;
+    listEl.insertAdjacentHTML('beforeend', html);
+  });
+
+  document.querySelectorAll('.delete-sub-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      if (confirm('この固定費設定を削除しますか？')) {
+        subStore.removeSubscription(e.currentTarget.dataset.id);
+      }
+    });
+  });
+};
+
 // --- Event Listeners ---
 document.addEventListener('DOMContentLoaded', () => {
   initChart();
+
+  // Check for auto-generation on load
+  subStore.checkAndGenerate();
+
   updateUI();
+  updateSubscriptionUI();
+
+  // Populate Day Selector
+  const daySelect = document.getElementById('sub-day');
+  for (let i = 1; i <= 31; i++) {
+    const option = document.createElement('option');
+    option.value = i;
+    option.textContent = i + '日';
+    daySelect.appendChild(option);
+  }
 
   // Modal Logic
   const modal = document.getElementById('modal');
   const addBtn = document.getElementById('add-btn');
   const closeBtn = document.getElementById('close-modal');
   const form = document.getElementById('transaction-form');
+
+  // Sub Modal Logic
+  const subModal = document.getElementById('sub-modal');
+  const addSubBtn = document.getElementById('add-sub-btn');
+  const closeSubBtn = document.getElementById('close-sub-modal');
+  const subForm = document.getElementById('subscription-form');
 
   addBtn.addEventListener('click', () => {
     modal.classList.add('active');
@@ -270,8 +403,17 @@ document.addEventListener('DOMContentLoaded', () => {
     modal.classList.remove('active');
   });
 
-  modal.addEventListener('click', (e) => {
+  addSubBtn.addEventListener('click', () => {
+    subModal.classList.add('active');
+  });
+
+  closeSubBtn.addEventListener('click', () => {
+    subModal.classList.remove('active');
+  });
+
+  window.addEventListener('click', (e) => {
     if (e.target === modal) modal.classList.remove('active');
+    if (e.target === subModal) subModal.classList.remove('active');
   });
 
   // Form Submit
@@ -291,6 +433,25 @@ document.addEventListener('DOMContentLoaded', () => {
     store.addTransaction(transaction);
     form.reset();
     modal.classList.remove('active');
+  });
+
+  // Sub Form Submit
+  subForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const title = document.getElementById('sub-title').value;
+    const amount = document.getElementById('sub-amount').value;
+    const day = document.getElementById('sub-day').value;
+
+    subStore.addSubscription({
+      id: crypto.randomUUID(),
+      title: title,
+      amount: Number(amount),
+      day: Number(day)
+    });
+
+    subForm.reset();
+    subModal.classList.remove('active');
+    alert('設定しました。次回から指定日に自動で記録されます。');
   });
 
   // Clear Data

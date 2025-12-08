@@ -142,18 +142,16 @@
               </div>
             </div>
 
-            <!-- Quick Add Fixed Cost (Optional Future Feature placeholder or just info) -->
+            <!-- Quick Add Fixed Cost -->
             <div style="margin-top: 20px;">
-              <h4 style="margin-bottom: 10px; font-size: 0.9rem; color: var(--text-muted);">固定費メモ</h4>
-              <div class="fixed-cost-item"
-                style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                <span>家賃</span>
-                <span>¥80,000</span>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h4 style="font-size: 0.9rem; color: var(--text-muted);">固定費・サブスク</h4>
+                <button id="add-sub-btn" style="background: none; border: none; color: var(--accent); cursor: pointer;">
+                  <i class="fa-solid fa-plus"></i>
+                </button>
               </div>
-              <div class="fixed-cost-item"
-                style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                <span>ネット</span>
-                <span>¥5,000</span>
+              <div id="subscription-list" style="display: flex; flex-direction: column; gap: 10px;">
+                <!-- Subscriptions injected here -->
               </div>
             </div>
           </div>
@@ -167,7 +165,7 @@
       <i class="fa-solid fa-plus"></i>
     </button>
 
-    <!-- Modal -->
+    <!-- Transaction Modal -->
     <div class="modal-overlay" id="modal">
       <div class="modal-glass">
         <div class="modal-header">
@@ -226,6 +224,40 @@
           </div>
 
           <button type="submit" class="submit-btn">追加する</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Subscription Modal -->
+    <div class="modal-overlay" id="sub-modal">
+      <div class="modal-glass">
+        <div class="modal-header">
+          <h3>固定費・サブスク設定</h3>
+          <button class="close-btn" id="close-sub-modal"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="subscription-form">
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px;">
+            毎月指定した日に、自動的に支出として記録されます。
+          </p>
+
+          <div class="form-group">
+            <label for="sub-title">内容</label>
+            <input type="text" id="sub-title" placeholder="例: Netflix, 家賃" required class="glass-input">
+          </div>
+
+          <div class="form-group">
+            <label for="sub-amount">金額</label>
+            <input type="number" id="sub-amount" placeholder="0" required class="glass-input" min="1">
+          </div>
+
+          <div class="form-group">
+            <label for="sub-day">毎月の支払日</label>
+            <select id="sub-day" class="glass-input">
+              <!-- JS will populate 1-31 -->
+            </select>
+          </div>
+
+          <button type="submit" class="submit-btn">設定する</button>
         </form>
       </div>
     </div>
