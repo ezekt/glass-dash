@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="./vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Glassmorphism Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- FontAwesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script type="module" crossorigin src="./assets/index-mohE19hf.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-DFnDmQMF.css">
+<link rel="manifest" href="./manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="./registerSW.js"></script></head>
+
+<body>
+  <div id="app">
+    <div class="glass-container">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="logo">
+          <i class="fa-solid fa-layer-group"></i>
+          <span>GlassDash</span>
+        </div>
+        <nav class="nav-menu">
+          <a href="#" class="nav-item active">
+            <i class="fa-solid fa-house"></i>
+            <span>ホーム</span>
+          </a>
+          <a href="#" class="nav-item">
+            <i class="fa-solid fa-chart-pie"></i>
+            <span>アナリティクス</span>
+          </a>
+          <a href="#" class="nav-item">
+            <i class="fa-solid fa-wallet"></i>
+            <span>ウォレット</span>
+          </a>
+          <a href="#" class="nav-item">
+            <i class="fa-solid fa-message"></i>
+            <span>メッセージ</span>
+          </a>
+          <a href="#" class="nav-item">
+            <i class="fa-solid fa-gear"></i>
+            <span>設定</span>
+          </a>
+        </nav>
+        <div class="pro-banner">
+          <div class="pro-icon">
+            <i class="fa-solid fa-crown"></i>
+          </div>
+          <div class="pro-text">
+            <h4>Proへアップグレード</h4>
+            <p>全機能を開放</p>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <!-- Header -->
+        <header class="header">
+          <div class="search-bar">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="検索...">
+          </div>
+          <div class="user-profile">
+            <div class="notification">
+              <i class="fa-solid fa-bell"></i>
+              <span class="badge"></span>
+            </div>
+            <div class="profile-img">
+              <img src="https://ui-avatars.com/api/?name=User+Name&background=random" alt="User">
+            </div>
+            <div class="user-info">
+              <h4>山田 太郎</h4>
+              <p>管理者</p>
+            </div>
+          </div>
+        </header>
+
+        <!-- Dashboard Content -->
+        <div class="dashboard-grid">
+          <!-- Stats Cards -->
+          <div class="card stat-card">
+            <div class="card-icon color-1">
+              <i class="fa-solid fa-wallet"></i>
+            </div>
+            <div class="card-info">
+              <h3>現在の残高</h3>
+              <h2 id="total-balance">¥0</h2>
+              <p class="trend" id="balance-trend">---</p>
+            </div>
+          </div>
+          <div class="card stat-card">
+            <div class="card-icon color-3">
+              <i class="fa-solid fa-arrow-trend-up"></i>
+            </div>
+            <div class="card-info">
+              <h3>今月の収入</h3>
+              <h2 id="month-income">¥0</h2>
+              <p class="trend up"><i class="fa-solid fa-plus"></i> 収入</p>
+            </div>
+          </div>
+          <div class="card stat-card">
+            <div class="card-icon color-2">
+              <i class="fa-solid fa-arrow-trend-down"></i>
+            </div>
+            <div class="card-info">
+              <h3>今月の支出</h3>
+              <h2 id="month-expense">¥0</h2>
+              <p class="trend down"><i class="fa-solid fa-minus"></i> 支出</p>
+            </div>
+          </div>
+
+          <!-- Main Chart Section -->
+          <div class="card chart-section">
+            <div class="card-header">
+              <h3>収支推移</h3>
+              <select class="glass-select" id="chart-period">
+                <option value="6">半年</option>
+                <option value="12">1年</option>
+              </select>
+            </div>
+            <div class="chart-container">
+              <canvas id="revenueChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Recent Transactions -->
+          <div class="card transactions-section">
+            <div class="card-header">
+              <h3>最近の取引</h3>
+              <button class="glass-btn-sm" id="clear-data-btn"
+                style="font-size: 0.8rem; padding: 4px 8px;">データ削除</button>
+            </div>
+            <div class="transaction-list" id="transaction-list">
+              <!-- Transactions will be injected here by JS -->
+            </div>
+          </div>
+
+          <!-- Right Side Panel / Calendar or something -->
+          <div class="card side-panel">
+            <h3>マイカード</h3>
+            <div class="credit-card">
+              <div class="cc-header">
+                <span>VISA</span>
+                <i class="fa-solid fa-wifi"></i>
+              </div>
+              <div class="cc-number">**** **** **** 4291</div>
+              <div class="cc-footer">
+                <div class="cc-holder">
+                  <span>名義人</span>
+                  <h5>YAMADA TARO</h5>
+                </div>
+                <div class="cc-expiry">
+                  <span>有効期限</span>
+                  <h5>12/25</h5>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Add Fixed Cost (Optional Future Feature placeholder or just info) -->
+            <div style="margin-top: 20px;">
+              <h4 style="margin-bottom: 10px; font-size: 0.9rem; color: var(--text-muted);">固定費メモ</h4>
+              <div class="fixed-cost-item"
+                style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                <span>家賃</span>
+                <span>¥80,000</span>
+              </div>
+              <div class="fixed-cost-item"
+                style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                <span>ネット</span>
+                <span>¥5,000</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </main>
+    </div>
+
+    <!-- Floating Action Button -->
+    <button class="fab" id="add-btn">
+      <i class="fa-solid fa-plus"></i>
+    </button>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modal">
+      <div class="modal-glass">
+        <div class="modal-header">
+          <h3>取引を追加</h3>
+          <button class="close-btn" id="close-modal"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="transaction-form">
+          <!-- Receipt Scan Button -->
+          <div class="scan-section" style="margin-bottom: 20px; text-align: center;">
+            <input type="file" id="receipt-input" accept="image/*" style="display: none;">
+            <button type="button" id="scan-btn" class="glass-btn-sm"
+              style="width: 100%; padding: 10px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+              <i class="fa-solid fa-camera"></i> レシートをスキャン (AI)
+            </button>
+            <p id="scan-status"
+              style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px; min-height: 1.2em;"></p>
+          </div>
+
+          <div class="form-group">
+            <label>タイプ</label>
+            <div class="type-selector">
+              <input type="radio" name="type" id="type-expense" value="expense" checked>
+              <label for="type-expense" class="type-btn expense">支出</label>
+
+              <input type="radio" name="type" id="type-income" value="income">
+              <label for="type-income" class="type-btn income">収入</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="date">日付</label>
+            <input type="date" id="date" required class="glass-input">
+          </div>
+
+          <div class="form-group">
+            <label for="title">内容</label>
+            <input type="text" id="title" placeholder="例: スーパー、給料" required class="glass-input">
+          </div>
+
+          <div class="form-group">
+            <label for="amount">金額</label>
+            <input type="number" id="amount" placeholder="0" required class="glass-input" min="1">
+          </div>
+
+          <div class="form-group">
+            <label for="category">カテゴリ</label>
+            <select id="category" class="glass-input">
+              <option value="food">食費</option>
+              <option value="daily">日用品</option>
+              <option value="transport">交通費</option>
+              <option value="entertainment">交際・娯楽</option>
+              <option value="fixed">固定費(家賃・光熱費)</option>
+              <option value="salary">給与</option>
+              <option value="other">その他</option>
+            </select>
+          </div>
+
+          <button type="submit" class="submit-btn">追加する</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Background Orbs -->
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+</body>
+
+</html>
