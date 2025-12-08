@@ -605,6 +605,11 @@ body {
   background: rgba(255, 255, 255, 0.1);
 }
 
+select.glass-input option {
+  background-color: #fff;
+  color: #333;
+}
+
 .type-selector {
   display: flex;
   gap: 10px;
