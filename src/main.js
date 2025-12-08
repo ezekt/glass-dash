@@ -366,6 +366,7 @@ const updateSubscriptionUI = () => {
 // --- Event Listeners ---
 document.addEventListener('DOMContentLoaded', () => {
   initChart();
+  initCategoryChart();
 
   // Check for auto-generation on load
   subStore.checkAndGenerate();
@@ -381,6 +382,39 @@ document.addEventListener('DOMContentLoaded', () => {
     option.textContent = i + '日';
     daySelect.appendChild(option);
   }
+
+  // Analytics Period Change
+  document.getElementById('analytics-period')?.addEventListener('change', (e) => {
+    updateCategoryChart(e.target.value);
+  });
+
+  // Nav Logic
+  const navItems = document.querySelectorAll('.nav-item');
+  const sections = document.querySelectorAll('.page-section');
+
+  navItems.forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.preventDefault();
+
+      // Update Nav
+      navItems.forEach(nav => nav.classList.remove('active'));
+      item.classList.add('active');
+
+      // Update Section
+      const targetId = item.dataset.target + '-section';
+      sections.forEach(section => {
+        if (section.id === targetId) {
+          section.style.display = 'grid'; // Use grid for dashboard layout
+          // Trigger chart resize/update if needed
+          if (targetId === 'analytics-section') {
+            updateCategoryChart(document.getElementById('analytics-period').value);
+          }
+        } else {
+          section.style.display = 'none';
+        }
+      });
+    });
+  });
 
   // Modal Logic
   const modal = document.getElementById('modal');
@@ -459,16 +493,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (confirm('全てのデータを削除しますか？この操作は取り消せません。')) {
       store.clearAll();
     }
-  });
-
-  // Nav Logic
-  const navItems = document.querySelectorAll('.nav-item');
-  navItems.forEach(item => {
-    item.addEventListener('click', (e) => {
-      e.preventDefault();
-      navItems.forEach(nav => nav.classList.remove('active'));
-      item.classList.add('active');
-    });
   });
 
   // --- Receipt Scanning Logic (Client-side OCR) ---

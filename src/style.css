@@ -714,7 +714,7 @@ input[type="radio"]:checked+.type-btn.income {
   }
 
   .fab {
-    bottom: 20px;
+    bottom: 80px;
     right: 20px;
   }
 }

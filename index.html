@@ -23,15 +23,15 @@
           <span>GlassDash</span>
         </div>
         <nav class="nav-menu">
-          <a href="#" class="nav-item active">
+          <a href="#" class="nav-item active" data-target="home">
             <i class="fa-solid fa-house"></i>
             <span>ホーム</span>
           </a>
-          <a href="#" class="nav-item">
+          <a href="#" class="nav-item" data-target="analytics">
             <i class="fa-solid fa-chart-pie"></i>
             <span>アナリティクス</span>
           </a>
-          <a href="#" class="nav-item">
+          <a href="#" class="nav-item" data-target="wallet">
             <i class="fa-solid fa-wallet"></i>
             <span>ウォレット</span>
           </a>
@@ -61,8 +61,8 @@
           </div>
         </header>
 
-        <!-- Dashboard Content -->
-        <div class="dashboard-grid">
+        <!-- Dashboard Content (Home) -->
+        <div class="dashboard-grid page-section" id="home-section">
           <!-- Stats Cards -->
           <div class="card stat-card">
             <div class="card-icon color-1">
@@ -129,15 +129,15 @@
                 <span>VISA</span>
                 <i class="fa-solid fa-wifi"></i>
               </div>
-              <div class="cc-number">**** **** **** 4291</div>
+              <div class="cc-number">**** **** **** 3112</div>
               <div class="cc-footer">
                 <div class="cc-holder">
                   <span>名義人</span>
-                  <h5>YAMADA TARO</h5>
+                  <h5>INOYAMA KOKI</h5>
                 </div>
                 <div class="cc-expiry">
                   <span>有効期限</span>
-                  <h5>12/25</h5>
+                  <h5>MM/YY</h5>
                 </div>
               </div>
             </div>
@@ -155,7 +155,30 @@
               </div>
             </div>
           </div>
+        </div>
 
+        <!-- Analytics Section -->
+        <div class="dashboard-grid page-section" id="analytics-section" style="display: none;">
+          <div class="card" style="grid-column: span 3; min-height: 500px;">
+            <div class="card-header">
+              <h3>カテゴリ別支出</h3>
+              <select class="glass-select" id="analytics-period">
+                <option value="current">今月</option>
+                <option value="last">先月</option>
+              </select>
+            </div>
+            <div class="chart-container" style="height: 400px; display: flex; justify-content: center;">
+              <canvas id="categoryChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Wallet Section (Placeholder) -->
+        <div class="dashboard-grid page-section" id="wallet-section" style="display: none;">
+          <div class="card" style="grid-column: span 3;">
+            <h3>ウォレット管理</h3>
+            <p style="color: var(--text-muted); margin-top: 20px;">現在開発中です。</p>
+          </div>
         </div>
       </main>
     </div>
