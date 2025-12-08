@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <!-- FontAwesome for Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <script type="module" crossorigin src="./assets/index-Cl6cb-NN.js"></script>
+  <script type="module" crossorigin src="./assets/index-D5Vb-Xi9.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-DT5Dqo6H.css">
 <link rel="manifest" href="./manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="./registerSW.js"></script></head>
 
@@ -25,15 +25,15 @@
           <span>GlassDash</span>
         </div>
         <nav class="nav-menu">
-          <a href="#" class="nav-item active">
+          <a href="#" class="nav-item active" data-target="home">
             <i class="fa-solid fa-house"></i>
             <span>ホーム</span>
           </a>
-          <a href="#" class="nav-item">
+          <a href="#" class="nav-item" data-target="analytics">
             <i class="fa-solid fa-chart-pie"></i>
             <span>アナリティクス</span>
           </a>
-          <a href="#" class="nav-item">
+          <a href="#" class="nav-item" data-target="wallet">
             <i class="fa-solid fa-wallet"></i>
             <span>ウォレット</span>
           </a>
@@ -63,8 +63,8 @@
           </div>
         </header>
 
-        <!-- Dashboard Content -->
-        <div class="dashboard-grid">
+        <!-- Dashboard Content (Home) -->
+        <div class="dashboard-grid page-section" id="home-section">
           <!-- Stats Cards -->
           <div class="card stat-card">
             <div class="card-icon color-1">
@@ -157,7 +157,52 @@
               </div>
             </div>
           </div>
+        </div>
 
+        <!-- Analytics Section -->
+        <div class="dashboard-grid page-section" id="analytics-section" style="display: none;">
+          <div class="card" style="grid-column: span 3; min-height: 500px;">
+            <div class="card-header">
+              <h3>カテゴリ別支出</h3>
+              <select class="glass-select" id="analytics-period">
+                <option value="current">今月</option>
+                <option value="last">先月</option>
+              </select>
+            </div>
+            <div class="chart-container" style="height: 400px; display: flex; justify-content: center;">
+              <canvas id="categoryChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Wallet Section (Debt Management) -->
+        <div class="dashboard-grid page-section" id="wallet-section" style="display: none;">
+          <!-- Total Debt Summary -->
+          <div class="card stat-card"
+            style="grid-column: span 3; background: linear-gradient(135deg, #d63031, #ff7675);">
+            <div class="card-icon" style="background: rgba(255,255,255,0.2); color: #fff;">
+              <i class="fa-solid fa-money-bill-transfer"></i>
+            </div>
+            <div class="card-info">
+              <h3 style="color: rgba(255,255,255,0.8);">借入残高合計</h3>
+              <h2 id="total-debt">¥0</h2>
+              <p class="trend" style="color: rgba(255,255,255,0.8);">返済を優先しましょう</p>
+            </div>
+            <button id="add-debt-btn" class="glass-btn-sm"
+              style="margin-left: auto; background: rgba(255,255,255,0.2); color: #fff; border: none;">
+              <i class="fa-solid fa-plus"></i> 追加
+            </button>
+          </div>
+
+          <!-- Debt List -->
+          <div class="card" style="grid-column: span 3;">
+            <div class="card-header">
+              <h3>借入先一覧</h3>
+            </div>
+            <div id="debt-list" class="transaction-list">
+              <!-- Debts injected here -->
+            </div>
+          </div>
         </div>
       </main>
     </div>
@@ -260,6 +305,31 @@
           </div>
 
           <button type="submit" class="submit-btn">設定する</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Debt Modal -->
+    <div class="modal-overlay" id="debt-modal">
+      <div class="modal-glass">
+        <div class="modal-header">
+          <h3>借入先を追加</h3>
+          <button class="close-btn" id="close-debt-modal"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="debt-form">
+          <div class="form-group">
+            <label>借入先名</label>
+            <input type="text" id="debt-name" class="glass-input" placeholder="例: A社" required>
+          </div>
+          <div class="form-group">
+            <label>現在の残高</label>
+            <input type="number" id="debt-balance" class="glass-input" placeholder="0" required>
+          </div>
+          <div class="form-group">
+            <label>毎月の返済額（目安）</label>
+            <input type="number" id="debt-payment" class="glass-input" placeholder="0">
+          </div>
+          <button type="submit" class="submit-btn">追加する</button>
         </form>
       </div>
     </div>
