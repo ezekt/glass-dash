@@ -36,6 +36,27 @@
             <span>ウォレット</span>
           </a>
         </nav>
+
+        <div id="auth-container" style="margin-top: auto; padding: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+          <div id="login-area">
+            <button id="login-btn" class="glass-btn-sm"
+              style="width: 100%; justify-content: center; gap: 8px; display: flex;">
+              <i class="fa-brands fa-google"></i> ログイン
+            </button>
+          </div>
+          <div id="user-area" style="display: none; flex-direction: column; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <img id="user-avatar" src=""
+                style="width: 30px; height: 30px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.3);">
+              <span id="user-name"
+                style="font-size: 0.8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">User</span>
+            </div>
+            <button id="logout-btn" class="glass-btn-sm"
+              style="width: 100%; color: #ff7675; border-color: rgba(255,118,117,0.3);">
+              ログアウト
+            </button>
+          </div>
+        </div>
       </aside>
 
       <!-- Main Content -->
