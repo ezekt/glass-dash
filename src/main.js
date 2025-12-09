@@ -971,7 +971,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
           updateUI();
           updateSubscriptionUI();
-          alert('クラウドからデータを同期しました。');
+          updateSubscriptionUI();
+          // alert('クラウドからデータを同期しました。');
+          console.log('Cloud data synced');
         } else {
           console.log('No cloud data found. Uploading local data...');
           saveToCloud();
