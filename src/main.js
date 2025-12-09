@@ -318,7 +318,7 @@ function updateDebtUI() {
           <i class="fa-solid fa-building-columns" style="color: #fff;"></i>
         </div>
         <div class="t-details">
-          <h4>${debt.name}</h4>
+          <h4>${debt.name} <span style="font-size: 0.7rem; opacity: 0.7;">${debt.rate ? '(年率 ' + debt.rate + '%)' : ''}</span></h4>
           <p>残高: ${formatCurrency(debt.balance)}</p>
         </div>
         <div style="display: flex; gap: 10px; align-items: center;">
@@ -810,12 +810,14 @@ document.addEventListener('DOMContentLoaded', () => {
       const name = document.getElementById('debt-name').value;
       const balance = document.getElementById('debt-balance').value;
       const payment = document.getElementById('debt-payment').value;
+      const rate = document.getElementById('debt-rate').value;
 
       debtStore.addDebt({
         id: crypto.randomUUID(),
         name: name,
         balance: Number(balance),
-        monthlyPayment: Number(payment)
+        monthlyPayment: Number(payment),
+        rate: rate ? Number(rate) : null
       });
 
       debtForm.reset();

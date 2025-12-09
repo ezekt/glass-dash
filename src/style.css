@@ -168,11 +168,16 @@ body {
   transition: all 0.3s ease;
 }
 
-.nav-item:hover,
-.nav-item.active {
+.nav-item:hover {
   background: var(--card-hover);
+  color: var(--text-main);
+}
+
+.nav-item.active {
+  background: var(--primary);
   color: #fff;
   border-left: 4px solid var(--accent);
+  box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
 }
 
 .nav-item i {
