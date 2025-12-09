@@ -4,12 +4,13 @@ import { format, parseISO, startOfMonth, endOfMonth, eachMonthOfInterval, subMon
 import { ja } from 'date-fns/locale';
 
 // --- State Management ---
+// --- State Management ---
 class TransactionStore {
   constructor() {
     this.transactions = JSON.parse(localStorage.getItem('transactions')) || [];
     // If empty, add some dummy data for demo
     if (this.transactions.length === 0) {
-      this.addTransaction({
+      this.transactions.push({
         id: crypto.randomUUID(),
         date: format(new Date(), 'yyyy-MM-dd'),
         title: '初期データ: 給与',
@@ -17,7 +18,7 @@ class TransactionStore {
         type: 'income',
         category: 'salary'
       });
-      this.addTransaction({
+      this.transactions.push({
         id: crypto.randomUUID(),
         date: format(new Date(), 'yyyy-MM-dd'),
         title: '初期データ: 家賃',
@@ -25,6 +26,7 @@ class TransactionStore {
         type: 'expense',
         category: 'fixed'
       });
+      localStorage.setItem('transactions', JSON.stringify(this.transactions));
     }
   }
 
@@ -86,6 +88,34 @@ class TransactionStore {
 
     return { labels, data };
   }
+
+  getCategoryStats(period = 'current') {
+    const now = new Date();
+    let targetDate = now;
+
+    if (period === 'last') {
+      targetDate = subMonths(now, 1);
+    }
+
+    const targetTransactions = this.transactions.filter(t =>
+      isSameMonth(parseISO(t.date), targetDate) && t.type === 'expense'
+    );
+
+    const categories = {};
+    targetTransactions.forEach(t => {
+      if (!categories[t.category]) {
+        categories[t.category] = 0;
+      }
+      categories[t.category] += Number(t.amount);
+    });
+
+    // Convert to arrays for Chart.js
+    const labels = Object.keys(categories).map(cat => getCategoryName(cat));
+    const data = Object.values(categories);
+    const bgColors = Object.keys(categories).map(cat => getCategoryColor(cat));
+
+    return { labels, data, bgColors };
+  }
 }
 
 const store = new TransactionStore();
@@ -99,18 +129,19 @@ class SubscriptionStore {
 
     // Initial dummy data if empty
     if (this.subscriptions.length === 0) {
-      this.addSubscription({
+      this.subscriptions.push({
         id: crypto.randomUUID(),
         title: '家賃',
         amount: 80000,
         day: 27
       });
-      this.addSubscription({
+      this.subscriptions.push({
         id: crypto.randomUUID(),
         title: 'Netflix',
         amount: 1490,
         day: 15
       });
+      localStorage.setItem('subscriptions', JSON.stringify(this.subscriptions));
     }
   }
 
@@ -220,19 +251,19 @@ class DebtStore {
 const debtStore = new DebtStore(store);
 
 // --- UI Updates ---
-const formatCurrency = (amount) => {
+function formatCurrency(amount) {
   return new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' }).format(amount);
-};
+}
 
-const getCategoryColor = (cat) => {
+function getCategoryColor(cat) {
   const map = {
     food: '#e17055', daily: '#00b894', transport: '#0984e3',
     entertainment: '#6c5ce7', fixed: '#d63031', salary: '#fdcb6e', other: '#636e72'
   };
   return map[cat] || '#636e72';
-};
+}
 
-const updateStats = () => {
+function updateStats() {
   const { income, expense, totalBalance } = store.getMonthlyStats();
   document.getElementById('total-balance').textContent = formatCurrency(totalBalance);
   document.getElementById('month-income').textContent = formatCurrency(income);
@@ -247,9 +278,9 @@ const updateStats = () => {
     trendEl.innerHTML = '<i class="fa-solid fa-arrow-down"></i> 赤字';
     trendEl.className = 'trend down';
   }
-};
+}
 
-const updateDebtUI = () => {
+function updateDebtUI() {
   const listEl = document.getElementById('debt-list');
   if (!listEl) return;
   listEl.innerHTML = '';
@@ -300,9 +331,9 @@ const updateDebtUI = () => {
       }
     });
   });
-};
+}
 
-const updateTransactionList = () => {
+function updateTransactionList() {
   const listEl = document.getElementById('transaction-list');
   listEl.innerHTML = '';
 
@@ -357,19 +388,21 @@ const updateTransactionList = () => {
       }
     });
   });
-};
+}
 
-const getCategoryName = (cat) => {
+function getCategoryName(cat) {
   const map = {
     food: '食費', daily: '日用品', transport: '交通費', entertainment: '交際・娯楽',
     fixed: '固定費', salary: '給与', other: 'その他'
   };
   return map[cat] || cat;
-};
+}
 
 // --- Chart ---
 let revenueChart;
-const initChart = () => {
+let categoryChart;
+
+function initChart() {
   const ctx = document.getElementById('revenueChart').getContext('2d');
   const gradient = ctx.createLinearGradient(0, 0, 0, 400);
   gradient.addColorStop(0, 'rgba(108, 92, 231, 0.5)');
@@ -424,26 +457,70 @@ const initChart = () => {
       }
     }
   });
-};
+}
 
-const updateChart = () => {
+function initCategoryChart() {
+  const ctx = document.getElementById('categoryChart').getContext('2d');
+
+  categoryChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: [],
+      datasets: [{
+        data: [],
+        backgroundColor: [],
+        borderWidth: 0,
+        hoverOffset: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: { color: '#fff' }
+        },
+        tooltip: {
+          callbacks: {
+            label: function (context) {
+              return context.label + ': ' + formatCurrency(context.parsed);
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function updateChart() {
   const { labels, data } = store.getChartData();
   revenueChart.data.labels = labels;
   revenueChart.data.datasets[0].data = data;
   revenueChart.update();
-};
+}
+
+function updateCategoryChart(period = 'current') {
+  if (!categoryChart) return;
+  const { labels, data, bgColors } = store.getCategoryStats(period);
+
+  categoryChart.data.labels = labels;
+  categoryChart.data.datasets[0].data = data;
+  categoryChart.data.datasets[0].backgroundColor = bgColors;
+  categoryChart.update();
+}
 
 // --- Main Update Loop ---
-const updateUI = () => {
+function updateUI() {
   updateStats();
   updateTransactionList();
   updateChart();
   updateCategoryChart(document.getElementById('analytics-period')?.value || 'current');
   updateDebtUI();
-};
+}
 
 // --- Event Listeners ---
-const updateSubscriptionUI = () => {
+function updateSubscriptionUI() {
   const listEl = document.getElementById('subscription-list');
   if (!listEl) return; // Guard clause
   listEl.innerHTML = '';
@@ -473,7 +550,7 @@ const updateSubscriptionUI = () => {
       }
     });
   });
-};
+}
 
 // --- Event Listeners ---
 document.addEventListener('DOMContentLoaded', () => {
