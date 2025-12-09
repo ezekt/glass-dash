@@ -696,21 +696,64 @@ input[type="radio"]:checked+.type-btn.income {
 @media (max-width: 1024px) {
   .dashboard-grid {
     grid-template-columns: 1fr;
-  }
-
-  .chart-section,
-  .transactions-section,
-  .side-panel {
-    grid-column: span 1;
-  }
-
-  .sidebar {
-    display: none;
-    /* For simplicity in this demo, usually would be a hamburger menu */
+    padding-bottom: 80px;
+    /* Space for bottom nav */
   }
 
   .glass-container {
     flex-direction: column;
+    padding: 0;
+    height: 100vh;
+  }
+
+  .sidebar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: auto;
+    background: rgba(16, 18, 27, 0.95);
+    backdrop-filter: blur(20px);
+    z-index: 100;
+    padding: 10px 20px;
+    border-top: 1px solid var(--glass-border);
+    display: flex;
+    justify-content: space-around;
+  }
+
+  .logo {
+    display: none;
+  }
+
+  .nav-menu {
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .nav-item {
+    flex-direction: column;
+    padding: 5px;
+    font-size: 0.7rem;
+    gap: 5px;
+  }
+
+  .nav-item i {
+    font-size: 1.2rem;
+  }
+
+  /* Adjust Modal for Mobile */
+  .modal-glass {
+    width: 95%;
+    max-height: 90vh;
+    padding: 20px;
+  }
+
+  main {
+    padding: 20px;
+    overflow-y: auto;
+    height: calc(100vh - 70px);
+    /* Subtract bottom nav height */
   }
 
   .fab {
