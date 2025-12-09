@@ -700,6 +700,10 @@ input[type="radio"]:checked+.type-btn.income {
     /* Space for bottom nav */
   }
 
+  .dashboard-grid>* {
+    grid-column: 1 / -1 !important;
+  }
+
   .glass-container {
     flex-direction: column;
     padding: 0;
