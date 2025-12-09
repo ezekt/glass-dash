@@ -11,8 +11,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <!-- FontAwesome for Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <script type="module" crossorigin src="./assets/index-HV42D21-.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-sKxeP0OZ.css">
+  <script type="module" crossorigin src="./assets/index-TmWFPjYj.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-s54OtRbh.css">
 <link rel="manifest" href="./manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="./registerSW.js"></script></head>
 
 <body>
@@ -29,6 +29,10 @@
             <i class="fa-solid fa-house"></i>
             <span>ホーム</span>
           </a>
+          <a href="#" class="nav-item" data-target="calendar">
+            <i class="fa-solid fa-calendar-days"></i>
+            <span>カレンダー</span>
+          </a>
           <a href="#" class="nav-item" data-target="analytics">
             <i class="fa-solid fa-chart-pie"></i>
             <span>アナリティクス</span>
@@ -40,6 +44,10 @@
         </nav>
 
         <div id="auth-container" style="margin-top: auto; padding: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+          <button id="theme-toggle" class="glass-btn-sm"
+            style="width: 100%; margin-bottom: 15px; justify-content: center; display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-sun"></i> ライトモード
+          </button>
           <div id="login-area">
             <button id="login-btn" class="glass-btn-sm"
               style="width: 100%; justify-content: center; gap: 8px; display: flex;">
@@ -193,6 +201,37 @@
             </div>
             <div class="chart-container" style="height: 400px; display: flex; justify-content: center;">
               <canvas id="categoryChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Calendar Section -->
+        <div class="dashboard-grid page-section" id="calendar-section" style="display: none;">
+          <div class="card" style="grid-column: span 3; min-height: 80vh; display: flex; flex-direction: column;">
+            <div class="card-header" style="margin-bottom: 20px;">
+              <div style="display: flex; align-items: center; gap: 15px;">
+                <button id="prev-month" class="glass-btn-sm"><i class="fa-solid fa-chevron-left"></i></button>
+                <h3 id="calendar-title" style="min-width: 120px; text-align: center;">2024年 12月</h3>
+                <button id="next-month" class="glass-btn-sm"><i class="fa-solid fa-chevron-right"></i></button>
+              </div>
+            </div>
+
+            <!-- Calendar Header (Days) -->
+            <div
+              style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; margin-bottom: 10px; font-weight: bold; font-size: 0.9rem;">
+              <div style="color: #ff7675;">日</div>
+              <div>月</div>
+              <div>火</div>
+              <div>水</div>
+              <div>木</div>
+              <div>金</div>
+              <div style="color: #0984e3;">土</div>
+            </div>
+
+            <!-- Calendar Grid -->
+            <div id="calendar-grid" class="calendar-grid"
+              style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; flex: 1;">
+              <!-- JS Injected -->
             </div>
           </div>
         </div>
