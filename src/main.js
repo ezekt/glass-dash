@@ -1,6 +1,6 @@
 import './style.css';
 import Chart from 'chart.js/auto';
-import { format, parseISO, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths, isSameMonth } from 'date-fns';
+import { format, parseISO, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths, isSameMonth, startOfWeek, endOfWeek, eachDayOfInterval, addMonths, isSameDay, getDay } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import { auth, provider, signInWithPopup, signOut, onAuthStateChanged, db, doc, getDoc, setDoc } from './firebase.js';
 
@@ -540,6 +540,56 @@ function updateUI() {
   updateChart();
   updateCategoryChart(document.getElementById('analytics-period')?.value || 'current');
   updateDebtUI();
+  renderCalendar(currentCalendarDate);
+}
+
+// --- Calendar Logic ---
+let currentCalendarDate = new Date();
+
+function renderCalendar(date) {
+  const grid = document.getElementById('calendar-grid');
+  const title = document.getElementById('calendar-title');
+  if (!grid || !title) return;
+
+  grid.innerHTML = '';
+  title.textContent = format(date, 'yyyy年 M月', { locale: ja });
+
+  const monthStart = startOfMonth(date);
+  const monthEnd = endOfMonth(date);
+  const startDate = startOfWeek(monthStart); // defaults to Sunday
+  const endDate = endOfWeek(monthEnd);
+
+  const days = eachDayOfInterval({ start: startDate, end: endDate });
+
+  days.forEach(day => {
+    const isCurrentMonth = isSameMonth(day, date);
+    const dayStr = format(day, 'yyyy-MM-dd');
+    const isToday = isSameDay(day, new Date());
+
+    // Calculate daily totals
+    const dayTrans = store.transactions.filter(t => t.date === dayStr);
+    const income = dayTrans.filter(t => t.type === 'income').reduce((sum, t) => sum + Number(t.amount), 0);
+    const expense = dayTrans.filter(t => t.type === 'expense').reduce((sum, t) => sum + Number(t.amount), 0);
+
+    const cell = document.createElement('div');
+    cell.className = 'calendar-cell';
+    if (!isCurrentMonth) cell.classList.add('other-month');
+    if (isToday) cell.classList.add('today-cell');
+
+    let html = `<div class="calendar-date">${format(day, 'd')}</div>`;
+    if (income > 0) html += `<div class="calendar-income">+${(income / 1000).toFixed(0)}k</div>`;
+    if (expense > 0) html += `<div class="calendar-expense">-${(expense / 1000).toFixed(0)}k</div>`;
+
+    cell.innerHTML = html;
+
+    cell.addEventListener('click', () => {
+      // Future: Show details for this day
+      // For now, maybe just log or alert
+      // alert(`${dayStr}\n収入: ¥${income}\n支出: ¥${expense}`);
+    });
+
+    grid.appendChild(cell);
+  });
 }
 
 // --- Event Listeners ---
@@ -585,6 +635,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
   updateUI();
   updateSubscriptionUI();
+
+  // Theme Toggle
+  const themeToggle = document.getElementById('theme-toggle');
+  const savedTheme = localStorage.getItem('theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+
+  if (themeToggle) {
+    if (savedTheme === 'light') themeToggle.innerHTML = '<i class="fa-solid fa-moon"></i> ダークモード';
+
+    themeToggle.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme');
+      const newTheme = current === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+
+      if (newTheme === 'light') {
+        themeToggle.innerHTML = '<i class="fa-solid fa-moon"></i> ダークモード';
+      } else {
+        themeToggle.innerHTML = '<i class="fa-solid fa-sun"></i> ライトモード';
+      }
+    });
+  }
+
+  // Calendar Nav
+  document.getElementById('prev-month')?.addEventListener('click', () => {
+    currentCalendarDate = subMonths(currentCalendarDate, 1);
+    renderCalendar(currentCalendarDate);
+  });
+
+  document.getElementById('next-month')?.addEventListener('click', () => {
+    currentCalendarDate = addMonths(currentCalendarDate, 1);
+    renderCalendar(currentCalendarDate);
+  });
 
   // Populate Day Selector
   const daySelect = document.getElementById('sub-day');
