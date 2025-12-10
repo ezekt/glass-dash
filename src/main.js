@@ -534,13 +534,14 @@ function updateCategoryChart(period = 'current') {
 }
 
 // --- Main Update Loop ---
+// --- Main Update Loop ---
 function updateUI() {
-  updateStats();
-  updateTransactionList();
-  updateChart();
-  updateCategoryChart(document.getElementById('analytics-period')?.value || 'current');
-  updateDebtUI();
-  renderCalendar(currentCalendarDate);
+  try { updateStats(); } catch (e) { console.error('updateStats failed', e); }
+  try { updateTransactionList(); } catch (e) { console.error('updateTransactionList failed', e); }
+  try { updateChart(); } catch (e) { console.error('updateChart failed', e); }
+  try { updateCategoryChart(document.getElementById('analytics-period')?.value || 'current'); } catch (e) { console.error('updateCategoryChart failed', e); }
+  try { updateDebtUI(); } catch (e) { console.error('updateDebtUI failed', e); }
+  try { renderCalendar(currentCalendarDate); } catch (e) { console.error('renderCalendar failed', e); }
 }
 
 // --- Calendar Logic ---
@@ -925,17 +926,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Helper to extract data from OCR text
   const parseReceiptText = (text) => {
-    // ... existing parse logic ...
-    // Since I'm replacing the end of file, I need to keep the helper or just not replace it.
-    // The previous instruction block includes up to line 818 (EOF).
-    // I should provide the helper code or avoid replacing it if not editing.
-    // Let's assume I keep the parse logic as is, but I can't selectively keep lines in a replace block.
-    // So I will just add the Auth logic BEFORE the receipt scanning logic or AT THE END.
-    // The safer way is to append listener logic inside DOMContentLoaded.
-    // I will replace `document.addEventListener('DOMContentLoaded', () => {` ... `});` content? No too big.
-    // I'll append Auth logic at the end of DOMContentLoaded block (before closing brace).
-    return parseReceiptTextRef ? parseReceiptTextRef(text) : { date: '', title: '', amount: '' }; // Hacky.
-    // Let's cancel this chunk and do Auth Logic as a separate replace for DOMContentLoaded end.
+    const res = { date: '', title: '', amount: '' };
+    if (!text) return res;
+
+    try {
+      // Simple Date Regex: 2024年12月10日
+      const dateMatch = text.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+      if (dateMatch) {
+        const year = dateMatch[1];
+        const month = dateMatch[2].padStart(2, '0');
+        const day = dateMatch[3].padStart(2, '0');
+        res.date = `${year}-${month}-${day}`;
+      }
+
+      // Amount Regex: ¥1,000 or 1,000円
+      const amountMatch = text.match(/¥\s*([0-9,]+)/) || text.match(/([0-9,]+)\s*円/);
+      if (amountMatch) {
+        res.amount = amountMatch[1].replace(/,/g, '');
+      }
+
+      // Title: First non-empty line
+      const lines = text.split('\n').filter(line => line.trim() !== '');
+      if (lines.length > 0) {
+        res.title = lines[0].substring(0, 20);
+      }
+    } catch (e) {
+      console.warn('OCR Parse warning:', e);
+    }
+    return res;
   };
 
   // --- Auth Logic ---
