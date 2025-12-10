@@ -568,10 +568,13 @@ function renderCalendar(date) {
     const dayStr = format(day, 'yyyy-MM-dd');
     const isToday = isSameDay(day, new Date());
 
-    // Calculate daily totals
+    // Calculate daily totals and categories
     const dayTrans = store.transactions.filter(t => t.date === dayStr);
     const income = dayTrans.filter(t => t.type === 'income').reduce((sum, t) => sum + Number(t.amount), 0);
     const expense = dayTrans.filter(t => t.type === 'expense').reduce((sum, t) => sum + Number(t.amount), 0);
+
+    // Get unique categories for expenses
+    const categories = [...new Set(dayTrans.filter(t => t.type === 'expense').map(t => t.category))];
 
     const cell = document.createElement('div');
     cell.className = 'calendar-cell';
@@ -579,6 +582,16 @@ function renderCalendar(date) {
     if (isToday) cell.classList.add('today-cell');
 
     let html = `<div class="calendar-date">${format(day, 'd')}</div>`;
+
+    // Add dots
+    if (categories.length > 0) {
+      html += `<div class="calendar-dots">`;
+      categories.forEach(cat => {
+        html += `<span class="dot" style="background-color: ${getCategoryColor(cat)};"></span>`;
+      });
+      html += `</div>`;
+    }
+
     if (income > 0) html += `<div class="calendar-income">+${(income / 1000).toFixed(0)}k</div>`;
     if (expense > 0) html += `<div class="calendar-expense">-${(expense / 1000).toFixed(0)}k</div>`;
 

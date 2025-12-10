@@ -720,6 +720,23 @@ input[type="radio"]:checked+.type-btn.income {
   background: rgba(255, 255, 255, 0.4);
 }
 
+/* Calendar Dots */
+.calendar-dots {
+  display: flex;
+  gap: 3px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 4px;
+  min-height: 10px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  opacity: 0.8;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
   .dashboard-grid {
