@@ -626,15 +626,22 @@ function updateSubscriptionUI() {
 }
 
 // --- Event Listeners ---
+// --- Event Listeners ---
 document.addEventListener('DOMContentLoaded', () => {
-  initChart();
-  initCategoryChart();
+  console.log('App initializing...');
+
+  try { initChart(); } catch (e) { console.error('initChart failed', e); }
+  try { initCategoryChart(); } catch (e) { console.error('initCategoryChart failed', e); }
 
   // Check for auto-generation on load
-  subStore.checkAndGenerate();
+  try { subStore.checkAndGenerate(); } catch (e) { console.error('subStore check failed', e); }
 
-  updateUI();
-  updateSubscriptionUI();
+  try {
+    updateUI();
+    updateSubscriptionUI();
+  } catch (e) {
+    console.error('Initial UI update failed', e);
+  }
 
   // Theme Toggle
   const themeToggle = document.getElementById('theme-toggle');
@@ -768,60 +775,80 @@ document.addEventListener('DOMContentLoaded', () => {
   // Form Submit
   form.addEventListener('submit', (e) => {
     e.preventDefault();
-    const formData = new FormData(form);
+    console.log('Form submitted');
+    try {
+      const formData = new FormData(form);
+      const uuid = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString().slice(2);
 
-    const transaction = {
-      id: crypto.randomUUID(),
-      type: formData.get('type'),
-      date: formData.get('date'), // yyyy-mm-dd
-      title: formData.get('title'),
-      amount: Number(formData.get('amount')),
-      category: formData.get('category')
-    };
+      const transaction = {
+        id: uuid,
+        type: formData.get('type'),
+        date: formData.get('date'),
+        title: formData.get('title'),
+        amount: Number(formData.get('amount')),
+        category: formData.get('category')
+      };
 
-    store.addTransaction(transaction);
-    form.reset();
-    modal.classList.remove('active');
+      console.log('Adding transaction:', transaction);
+      store.addTransaction(transaction);
+      form.reset();
+      modal.classList.remove('active');
+    } catch (err) {
+      console.error('Error adding transaction:', err);
+      alert('エラーが発生しました: ' + err.message);
+    }
   });
 
   // Sub Form Submit
   subForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    const title = document.getElementById('sub-title').value;
-    const amount = document.getElementById('sub-amount').value;
-    const day = document.getElementById('sub-day').value;
+    try {
+      const title = document.getElementById('sub-title').value;
+      const amount = document.getElementById('sub-amount').value;
+      const day = document.getElementById('sub-day').value;
+      const uuid = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString().slice(2);
 
-    subStore.addSubscription({
-      id: crypto.randomUUID(),
-      title: title,
-      amount: Number(amount),
-      day: Number(day)
-    });
+      subStore.addSubscription({
+        id: uuid,
+        title: title,
+        amount: Number(amount),
+        day: Number(day)
+      });
 
-    subForm.reset();
-    subModal.classList.remove('active');
-    alert('設定しました。次回から指定日に自動で記録されます。');
+      subForm.reset();
+      subModal.classList.remove('active');
+      alert('設定しました。次回から指定日に自動で記録されます。');
+    } catch (err) {
+      console.error('Error adding subscription:', err);
+      alert('エラー: ' + err.message);
+    }
   });
 
   // Debt Form Submit
   if (debtForm) {
     debtForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      const name = document.getElementById('debt-name').value;
-      const balance = document.getElementById('debt-balance').value;
-      const payment = document.getElementById('debt-payment').value;
-      const rate = document.getElementById('debt-rate').value;
+      try {
+        const name = document.getElementById('debt-name').value;
+        const balance = document.getElementById('debt-balance').value;
+        const payment = document.getElementById('debt-payment').value;
+        const rate = document.getElementById('debt-rate').value;
+        const uuid = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString().slice(2);
 
-      debtStore.addDebt({
-        id: crypto.randomUUID(),
-        name: name,
-        balance: Number(balance),
-        monthlyPayment: Number(payment),
-        rate: rate ? Number(rate) : null
-      });
+        debtStore.addDebt({
+          id: uuid,
+          name: name,
+          balance: Number(balance),
+          monthlyPayment: Number(payment),
+          rate: rate ? Number(rate) : null
+        });
 
-      debtForm.reset();
-      debtModal.classList.remove('active');
+        debtForm.reset();
+        debtModal.classList.remove('active');
+      } catch (err) {
+        console.error('Error adding debt:', err);
+        alert('エラー: ' + err.message);
+      }
     });
   }
 
