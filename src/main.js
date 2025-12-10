@@ -67,6 +67,7 @@ class TransactionStore {
 
   save() {
     localStorage.setItem('transactions', JSON.stringify(this.transactions));
+    console.log('Data saved to local storage, updating UI...');
     updateUI();
     saveToCloud();
   }
@@ -389,7 +390,7 @@ function updateTransactionList() {
         </div>
         <div class="t-details">
           <h4>${t.title}</h4>
-          <p>${format(parseISO(t.date), 'yyyy/MM/dd')} • ${getCategoryName(t.category)}</p>
+          <p>${t.date ? format(parseISO(t.date), 'yyyy/MM/dd') : '日付不明'} • ${getCategoryName(t.category)}</p>
         </div>
         <div class="t-amount ${amountClass}">
           ${sign}${formatCurrency(t.amount)}
